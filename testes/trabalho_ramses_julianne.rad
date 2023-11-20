@@ -1,0 +1,146 @@
+;TRABALHO RAMSES - JULIANNE 
+
+ORG H80
+sfile_ptr: 	DB 0
+slook_ptr: 	DB 0
+sfile_addr: 	DB 0
+slook_addr: 	DB 0
+curr_res: 	DB 0 
+
+ORG HE0
+sfile: 		DB hE3
+slook: 		DB hE9
+sres: 		DB 0
+
+ORG hE3
+sfile_v: 	DAB '12abc', 0
+
+ORG hE9
+slook_v: 	DAB 'abc', 0
+
+;========================================================
+
+;CODIGO DO TRABALHO RAMSES
+
+ORG H00
+
+LDR	X, #0		
+LDR	A, #0
+LDR	B, #0
+
+;------------------------------------------------
+
+;inicializando SRES
+
+;MEMORY[0xE2] = 0x00;
+;Inicializando SRES como 0x00
+
+STR A, sres
+STR A, sfile_ptr
+STR A, slook_ptr
+
+LDR A, #hFF	
+STR A, curr_res	; curr_res = -1
+
+;-------------------------------------------------
+
+loop:
+
+; int sfile_addr = MEMORY[0xE0] + sfile_ptr;
+	LDR A, sfile		; carrega para reg A a variável sfile
+	ADD A, sfile_ptr	; adiciona o ponteiro, seria o deslocamento 
+	STR A, sfile_addr	; salva o endereço de sfile
+
+; int slook_addr = MEMORY[0xE1] + slook_ptr;
+	LDR A, slook		; carrega a variável slook
+	ADD A, slook_ptr	; adiciona o ponteiro, seria o deslocamento
+	STR A, slook_addr	; salva o endereço de slook
+
+; ======== if(MEMORY[slook_addr] == '\0')
+
+	LDR A, slook_addr, I 	; acessa o conteúdo do endereço apontado pela slook_addr
+	JZ fim_slook_verf_vazia	; se igual a zero, chegou ao fim; verificar se é vazia
+	JMP verf_sfile			; se não, não está vazia, verifica sfile
+
+fim_slook_verf_vazia:
+	LDR A, curr_res	
+	JN verf_sfile 			; se curr_res == -1, slook é uma string vazia
+	
+	ADD A, sfile
+	STR A, sres			; se a string não for vazia, curr_res contém o resultado
+	JMP Fim
+
+; ======== if(MEMORY[sfile_addr] == '\0')
+
+verf_sfile:
+	LDR A, sfile_addr, I	; acessa o conteúdo do endereço apontado pela sfile_addr
+	JZ fim_sfile_verf_slook	; se igual a zero, chegou ao fim de sfile
+	JMP verf_chars_iguais	; se não, continua processando string
+
+fim_sfile_verf_slook:
+	LDR A, slook_addr, I 
+	JZ slook_vazia		
+	JMP fim_slook_vazia
+
+slook_vazia:			; nesse ponto, sabemos que curr_dir é -1 e a string é vazia
+	LDR A, sfile_ptr	; se não fosse, o programa já teria realizado o JMP Fim anterior
+	ADD A, sfile	
+	STR A, sres			
+
+fim_slook_vazia:
+	JMP Fim
+
+; ======== if(MEMORY[sfile_addr] == MEMORY[slook_addr])
+
+verf_chars_iguais:
+	LDR A, sfile_addr, I 		
+	SUB A, slook_addr, I
+	JZ chars_iguais		; MEMORY[sfile_addr] - MEMORY[slook_addr] == 0
+	JMP verf_slook_ptr	
+
+chars_iguais:		
+	LDR A, slook_ptr
+	JZ atualiza_curr_res
+	JMP inc_ptrs
+
+atualiza_curr_res:		; se slook_ptr == 0, sfile_ptr é um potencial início para slook
+	LDR A, sfile_ptr	; em sfile
+	STR A, curr_res	; por isso, esse endereço é salvo em curr_res
+
+inc_ptrs:
+	LDR A, sfile_ptr	; ambos os ponteiros sfile_ptr e slook_ptr serão incrementados
+	ADD A, #1		; enquanto os caracteres forem iguais
+	STR A, sfile_ptr	; sfile_ptr++
+
+	LDR A, slook_ptr
+	ADD A, #1
+	STR A, slook_ptr	; slook_ptr++
+	
+	JMP end_loop	
+
+; ======== else if(slook_ptr != 0)
+
+verf_slook_ptr:		; se os caracteres são diferentes e já tínhamos analisado
+	LDR A, slook_ptr	; parte de slook, devemos voltar ao ponto imediatamente
+	JZ inc_sfile_ptr	; após curr_dir (índice este que assumimos como sendo o índice 
+				; inicial de slook em sfile)
+	LDR A, #0
+	STR A, slook_ptr	; slook_ptr = 0, voltamos a analisar o primeiro caractere de slook
+	LDR A, curr_res
+	ADD A, #1
+	STR A, sfile_ptr	; sfile_ptr = curr_res+1
+	JMP end_loop
+
+; ======== else
+
+inc_sfile_ptr:			; se não analisamos caracteres de slook ainda, devemos
+	LDR A, sfile_ptr	; apenas incrementar sfile_ptr
+	ADD A, #1
+	STR A, sfile_ptr	; sfile_ptr++
+
+end_loop:
+	JMP loop
+
+Fim:
+	HLT
+

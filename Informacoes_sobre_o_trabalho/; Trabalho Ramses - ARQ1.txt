@@ -1,0 +1,75 @@
+; Trabalho Ramses - ARQ1
+; Turma A, 2023/1
+;-------------------------------------
+
+; Proposta do trabalho: 
+
+
+; Procedimento: analisar o código em c e ir montando aqui, de forma semelhante, utilizando o chat para dúvidas
+
+;----------------------------------------------------
+
+;;Endereços de entrada e saida, variaveis
+ORG hE0
+
+
+;;Os dois strings estarão dispostos na memória,
+na região entre os endereços 0xE3 até 0xFF, e pode ocorrer dos strings estarem sobrepostos.
+
+
+• É garantido que os vetores de entrada estejam completamente contidos na região reservada
+para eles, incluindo a marca de final de string;
+• É garantido que os vetores de entrada possuam, sempre, a marca de final de string.
+
+;;Alteração da memória de dados com as informações de entrada;
+b. Reset do processador, colocando o PC em 0x00 (zero);
+c. Execução do programa;
+d. Verificação do resultado.
+
+;;-------------------------------------------------------
+;;instruções
+;;Seu programa e todas as suas variáveis de trabalho devem 
+;;estar restritos a região de memória entre 0x00 e 0xDF;
+
+ORG h0
+
+;;Caso seja necessário inicializar suas variáveis internas, 
+;;isso deve ser feito de forma explícita através de instruções 
+;;do programa. 
+
+;; tipo setar em zero uma variavel  #0 em tal variavel
+
+// inicializar variaveis
+
+// depois que inicializa ja pode entrar em uma funcao, esta funcao 
+// ira procurar a string no 
+
+; Implementação dos loops para percorrer os bytes dos strings e compará-los
+; Pode ser utilizado um loop com instruções de carga (LDR) para obter os bytes dos strings
+
+;; exemplos de como percorrer nos slides
+
+    ; Comparação dos bytes e verificação de correspondência
+
+        ; Se uma correspondência for encontrada, armazene o resultado em um registrador ou local de memória apropriado
+        ; Por exemplo, pode-se armazenar a posição inicial do string SLOOK em um registrador ou local de memória
+
+        ; Caso contrário, continue a busca até encontrar uma correspondência ou percorrer todos os bytes
+
+    ; Finalização da função procurarString
+
+; Chamada da função procurarString, passando os endereços dos strings SFILE e SLOOK como argumentos
+BL procurarString ; Chama a função procurarString
+
+; Armazenamento do resultado da busca no endereço de memória 0xE2
+; Verifique se a busca foi bem-sucedida e, em caso afirmativo, armazene o valor encontrado (posição inicial do string SLOOK) no endereço 0xE2
+; Caso contrário, armazene o valor 0x00 no endereço 0xE2 para indicar que o string não foi encontrado
+
+; Conclusão da execução do programa
+
+; Outras instruções ou código necessário para concluir o programa, se houver
+
+; Fim do código
+
+fim: HLT
+

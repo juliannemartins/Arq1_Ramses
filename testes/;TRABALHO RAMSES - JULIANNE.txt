@@ -1,0 +1,187 @@
+;TRABALHO RAMSES - JULIANNE 
+
+ORG H80
+indice_i: DB 0
+indice_j: DB 0
+tam_sfile: DB 0
+tam_slook: DB 0
+
+ORG HE0
+sfile: DB 0
+slook: DB 0
+sres: DB 0
+sfile_v: DAB h31, h32, h61, h62, h63, h0
+slook_v: DAB h61, h61, h63, h0
+
+;========================================================
+
+;CODIGO DO TRABALHO RAMSES
+
+ORG H00
+
+ldr	x, #0		
+ldr	a, #0
+ldr	b, #0
+
+;------------------------------------------------
+
+;inicializando SRES
+
+;MEMORY[0xE2] = 0x00;
+;Inicializando SRES como 0x00
+
+STA X, sres
+
+;-------------------------------------------------
+
+; Verifica se a sfile está vazia
+LDR A, sfile_v  ; Carrega o valor do primeiro elemento do vetor
+JZ  SfileVazio  ; Se for zero, a SFILE está vazia
+
+; se não está vazio, então começa em E3
+LDR X, #sfile_v    ;endereço da primeira posição do vetor do sfile
+STR X, sfile       ;salva em sfile, variável que guarda a primeira posição de sfile
+
+;-------------------------------------------------
+
+confere_slook:	LDR B, slook_v   ; Carrega o valor do primeiro elemento do vetor slook
+		JZ SlookVazio    ; Se for zero, o vetor está vazio
+
+SlookNaoVazio:	LDR B, #0
+		LDR B, #slook_v  ; Acessa o endereço da primeira posição do vetor de strings st_slook
+		STR B, slook  ; Salva em slook, a variável que guarda a primeira posição da string slook
+
+;-------------------------------------------------
+
+ldr	x, #0		
+ldr	a, #0
+ldr	b, #0
+
+;--------------------------------------------------
+;achar o tamanho de sfile
+Loop1:		ldr		a,sfile_v,x	; while ( vetor[i] != 0 ) {
+		jz		guarda_tam_slook
+		add		x,#1		;	i++;
+		str		x, tam_sfile
+		jmp		Loop1		; }
+
+
+;achar o tamanho de slook
+guarda_tam_slook:	LDR	X, #0
+
+Loop2:		ldr		b,slook_v,x	; while ( vetor[i] != 0 ) {
+		jz		Fim
+		add		x,#1		;	i++;
+		str		x, tam_slook
+		jmp		Loop2		; }
+
+
+; neste ponto:
+; tam_sfile = 5
+; tam_slook = 3
+
+
+;----------------------------compara-------------------------------
+
+;loop_i:	LDR X, indice_i		
+;	LDR A, sfile, x
+;
+;	JZ para
+;
+;	LDR X, indice_j
+;	LDR B, slook, x
+;
+;	JZ para
+;
+;	ADD X, #1
+;	STR X, indice_i
+;	STR X, indice_j
+;	JMP loop_i
+
+;---------------------------------------------------------------------
+
+
+ int sfile_ptr = 0, slook_ptr = 0;
+ int curr_res = -1;
+
+        while(1) {
+
+            int sfile_addr = MEMORY[0xE0] + sfile_ptr;
+            int slook_addr = MEMORY[0xE1] + slook_ptr;
+
+            //printf("M[f]: %c M[l]: %c\n", MEMORY[sfile_addr], MEMORY[slook_addr]);
+
+
+
+
+
+            if(MEMORY[slook_addr] == '\0') {
+                // Se SLOOK foi varrida por completo...
+
+                if(curr_res != -1) {
+                    // ... e a resposta já foi calculada (string não vazia),
+                    // atualiza SRES e sai do laço.
+                    MEMORY[0xE2] = curr_res;
+                    break;
+                }
+            }
+
+
+
+            if(MEMORY[sfile_addr] == '\0') {
+
+                if(MEMORY[slook_addr] == '\0' && curr_res == -1) {
+
+                    MEMORY[0xE2] = sfile_ptr;
+                    // Se SLOOK era a string vazia, então
+                    // somente o caractere '\0' é comum às strings
+                }
+
+                break;
+                // Se SFILE já foi completamente lida, sai do laço
+            }
+
+
+
+            if(MEMORY[sfile_addr] == MEMORY[slook_addr]) {
+                
+		if(slook_ptr == 0) {
+                    curr_res = sfile_ptr;
+                    // Se é o primeiro caractere, pode ser
+                    // que SLOOK comece ali
+                }
+
+                sfile_ptr++;
+                slook_ptr++;
+
+                // Passa a verificar o próximo caractere de SLOOK
+            } else if(slook_ptr != 0) {
+                slook_ptr = 0;
+                sfile_ptr = curr_res+1;
+                // SLOOK deixou de ser igual a SFILE, então devemos 
+                // verificar se SLOOK pode começar na posição que vem 
+                // logo após o início da substring que estávamos analisando
+            } else {
+                sfile_ptr++;
+                // Se já era o inicial, então devemos verificar o
+                // próximo caractere de SFILE.
+            }
+
+        }
+
+
+
+;---------------------------------------------------------------
+
+SfileVazio: ;zera SRES e confere se há slook pra guardar o endereco
+		LDR B, #0
+		STR B, SRES
+		JMP Fim
+
+SlookVazio: 	;STR X, SRES  ; Salva em SRES o endereço do endereço X
+		JMP Fim
+
+;-----------------------------------------------------------------		   
+
+Fim: HLT
+

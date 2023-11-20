@@ -1,0 +1,26 @@
+Símbolo         Valor Decimal   Valor Hexadecimal
+-------         -------------   -----------------
+SFILE_PTR                 128                  80
+SLOOK_PTR                 129                  81
+SFILE_ADDR                130                  82
+SLOOK_ADDR                131                  83
+CURR_RES                  132                  84
+SFILE                     224                  E0
+SLOOK                     225                  E1
+SRES                      226                  E2
+SFILE_V                   227                  E3
+SLOOK_V                   233                  E9
+LOOP                       16                  10
+FIM_SLOOK_VERF_VAZIA       34                  22
+VERF_SFILE                 44                  2C
+FIM_SFILE_VERF_SLOOK       50                  32
+SLOOK_VAZIA                56                  38
+FIM_SLOOK_VAZIA            62                  3E
+VERF_CHARS_IGUAIS          64                  40
+CHARS_IGUAIS               72                  48
+ATUALIZA_CURR_RES          78                  4E
+INC_PTRS                   82                  52
+VERF_SLOOK_PTR             96                  60
+INC_SFILE_PTR             112                  70
+END_LOOP                  118                  76
+FIM                       120                  78

@@ -1,0 +1,198 @@
+;========================================================
+
+;CODIGO DO TRABALHO RAMSES
+
+ORG H00
+
+; Inicializa a memória
+InitializeMemory:
+
+
+    ; Inicializando SRES como 0x00
+    STA X, sres
+
+;-------------------------------------------
+
+    ; Verifica se sfile está vazia
+    LDR A, sfile_v  ; Carrega o valor do primeiro elemento do vetor
+    JZ SfileVazio   ; Se for zero, a sfile está vazia
+
+    ; Se não está vazia, então começa em E3
+    LDR X, #sfile_v  ; Endereço da primeira posição do vetor sfile_v
+    STR X, sfile     ; Salva em sfile o endereço da primeira posição de sfile
+
+    ; Verifica se slook está vazio
+    LDR B, slook_v   ; Carrega o valor do primeiro elemento do vetor slook_v
+    JZ SlookVazio    ; Se for zero, o vetor está vazio
+
+    ; Se não está vazio, então começa em E4
+    LDR B, #0
+    LDR B, #slook_v  ; Acessa o endereço da primeira posição do vetor slook_v
+    STR B, slook     ; Salva em slook o endereço da primeira posição da string slook
+
+;---------------------------------------------
+
+; Loop principal
+MainLoop:
+
+    ; Lê a entrada
+    ; if(ReadInput()) break;
+    ; (Não está claro como ReadInput() funciona, por isso esse trecho foi omitido)
+
+    ; Inicializa SRES como 0x00
+    LDR B, #0
+    STR B, sres
+
+    ; Inicializa os ponteiros
+    LDR A, #0
+    LDR B, #0
+    LDR X, #0
+    LDR Y, #0
+
+    ; Inicializa curr_res como -1
+    LDR A, #-1
+    STR A, curr_res
+
+InnerLoop:
+
+    ; int sfile_addr = MEMORY[0xE0] + sfile_ptr;
+    LDR X, #0xE0
+    ADD X, sfile_ptr
+    STR X, sfile_addr
+
+    ; int slook_addr = MEMORY[0xE1] + slook_ptr;
+    LDR X, #0xE1
+    ADD X, slook_ptr
+    STR X, slook_addr
+
+    ; if(MEMORY[slook_addr] == '\0') {
+    LDR A, [slook_addr]
+    CMP A, #'\0'
+    BNE NotSlookComplete
+
+    ; Se SLOOK foi varrida por completo...
+
+    ; if(curr_res != -1) {
+    LDR A, curr_res
+    CMP A, #-1
+    BEQ SkipUpdateSres
+
+    ; ... e a resposta já foi calculada (string não vazia),
+    ; atualiza SRES e sai do laço.
+    LDR A, curr_res
+    STR A, sres
+    JMP InnerLoopEnd
+
+NotSlookComplete:
+
+    ; if(MEMORY[sfile_addr] == '\0') {
+    LDR A, [sfile_addr]
+    CMP A, #'\0'
+    BNE NotSfileComplete
+
+    ; Se SFILE já foi completamente lida, sai do laço
+    JMP InnerLoopEnd
+
+NotSfileComplete:
+
+    ; if(MEMORY[sfile_addr] == MEMORY[slook_addr]) {
+    LDR A, [sfile_addr]
+    LDR B, [slook_addr]
+    CMP A, B
+    BNE SlookNotEqual
+
+    ; Se é o primeiro caractere, pode ser
+    ; que SLOOK comece ali
+    LDR A, slook_ptr
+    CMP A, #0
+    BNE SlookNotFirstChar
+
+    ; curr_res = sfile_ptr;
+    LDR A, sfile_ptr
+    STR A, curr_res
+
+SlookNotFirstChar:
+
+    ; sfile_ptr++;
+    LDR A, sfile_ptr
+    ADD A, #1
+    STR A, sfile_ptr
+
+    ; slook_ptr++;
+    LDR A, slook_ptr
+    ADD A, #1
+    STR A, slook_ptr
+
+    JMP InnerLoop
+
+SlookNotEqual:
+
+    ; else if(slook_ptr != 0) {
+    LDR A, slook_ptr
+    CMP A, #0
+    BEQ SkipSlookPtrReset
+
+    ; slook_ptr = 0;
+    LDR A, #0
+    STR A, slook_ptr
+
+    ; sfile_ptr = curr_res+1;
+    LDR A, curr_res
+    ADD A, #1
+    STR A, sfile_ptr
+
+    JMP InnerLoop
+
+SkipSlookPtrReset:
+
+    ; sfile_ptr++;
+    LDR A, sfile_ptr
+    ADD A, #1
+    STR A, sfile_ptr
+
+    JMP InnerLoop
+
+InnerLoopEnd:
+
+    ; Verifica se slook é vazio
+    LDR B, slook_v
+    JZ SlookVazio
+
+    JMP MainLoop
+
+; Lógica para quando sfile está vazio
+SfileVazio:
+
+    ; Se slook é vazio e curr_res é -1,
+    ; então somente o caractere '\0' é comum às strings
+    LDR A, slook_v
+    JZ SlookVazio
+    LDR A, curr_res
+    CMP A, #-1
+    BNE SfileNotEmpty
+
+    ; Se SLOOK era a string vazia, então
+    ; somente o caractere '\0' é comum às strings
+    LDR A, sfile_ptr
+    STR A, sres
+
+    JMP MainLoop
+
+SfileNotEmpty:
+
+    ; SFILE já foi completamente lida, sai do laço
+    JMP MainLoop
+
+; Lógica para quando slook é vazio
+SlookVazio:
+
+    ; Se SLOOK foi varrida por completo e a resposta já foi calculada,
+    ; atualiza SRES e sai do laço
+    LDR A, curr_res
+    CMP A, #-1
+    BEQ MainLoop
+
+    LDR A, curr_res
+    STR A, sres
+
+    JMP MainLoop
